@@ -53,7 +53,16 @@ from nltk.tokenize import sent_tokenize
 
 import Levenshtein
 
-geolocator = Nominatim(user_agent="project")
+# geolocator = Nominatim(user_agent="project")
+config = dict(user_agent="project1")
+def geocode(geocoder, config, query):
+    cls = get_geocoder_for_service(geocoder)
+    geolocator = cls(**config)
+    location = geolocator.geocode(query, timeout=5, language="en")
+#     print(location.address)
+    if len(str(location).split(",")) > 1:
+        return ""
+    return location
 
 # This function is to get the title, abstract and affiliation based on PMID.
 def parse_data(data):
@@ -165,28 +174,16 @@ def get_csv(PMID):
         csv_write.writerow([i, data1[i][0], data1[i][1], data1[i][2], data1[i][3], data1[i][4]])
     print("Finish csv.")
 
-def get_standard_improvement(a):
+# This function is to do normalisation.
+def get_standard_country(a):
     b = []
     for i in a:
-#         print(type(i))
-        if i != "None":
-            i = i.replace("the ","")
-            s = rangeBuilder.standardizeCountry(i)[0]
-            if s != "":
-                b.append(s)
-            else:
-                b.append(i)
-        else:
-            b.append(i)
-    return b
-
-def get_standard(a):
-    b = []
-    for i in a:
-#         print(type(i))
         i = i.replace("the ","")
         s = rangeBuilder.standardizeCountry(i)[0]
-        b.append(s)
+        if s != "":
+            b.append(s)
+        else:
+            b.append(i)
     return b
 
 # This function is to calculate the precision of organisation.
@@ -313,9 +310,9 @@ def cal_country_level(label):
                 stanfordNERnlp, value, 0, 1, 0)
             stanford_result = stanford_result + [" ".join(possible_stanfordNER)]
         # y_true = np.array(stanford_result)
-        y_true = np.array(get_standard(stanford_result))
+        y_true = np.array(get_standard_country(stanford_result))    # the result of normalisation
         # y_pred = np.array(list(label))
-        y_pred = np.array(get_standard(list(label)))
+        y_pred = np.array(get_standard_country(list(label)))
         # cm = confusion_matrix(y_true, y_pred)
         # print("1", cm)
         precision = precision_score(y_true, y_pred, average="weighted")
