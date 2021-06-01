@@ -55,6 +55,7 @@ import Levenshtein
 
 geolocator = Nominatim(user_agent="project")
 
+# This function is to get the title, abstract and affiliation based on PMID.
 def parse_data(data):
     dic = {}
     root = ET.fromstring(data)
@@ -78,6 +79,7 @@ def parse_data(data):
         dic[PMID] = [articleTitle, abstractTexts, affiliations]
     return dic
 
+# This function is to get the authors and affiliations, because we want to check if the number of authors is same with that of affiliations.
 def parse_data_author(data):
     judge_same = True
     dic = {}
@@ -101,12 +103,6 @@ def parse_data_author(data):
                             affiliation = affiliationInfo.find("Affiliation").text
                             affiliations_list.append(affiliation)
                             author_affiliation.append([full_name, affiliation])
-            # print("1", author_list)
-            # print("11", len(author_list))
-            # print("2", affiliations_list)
-            # print("22", len(affiliations_list))
-            # print("3", author_affiliation)
-            # print("33", len(author_affiliation))
             affiliations = "$".join(affiliations_list)
             if affiliations == "":
                 affiliations = "None"
@@ -128,23 +124,31 @@ def get_precision(a, b):
             num += 1
     return num/len(a)
 
-def get_json(PMID):
+# This function is to store the title, abstract and affiliation in json file.
+def get_json_title_abstract_affiliation():
     data1 = {}
     for i in list(PMID):
         efetch = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?&db=pubmed&retmode=xml&id=%s" % (i)
         handle = urlopen(efetch)
         data_xml = handle.read()
-        # print(i)
-        # if i == 23618500:
-        #     print(data_xml)
-        # if i == 27296722:
-        #     print(data_xml)
+        data = parse_data(data_xml)
+        data1.update(data)
+    with open("dataset.json", "w") as f:
+        json.dump(data1, f)
+        print("finish json.")
+
+# This function is to store the authors and affiliations in json file
+def get_json_authors_affiliations(PMID):
+    data1 = {}
+    for i in list(PMID):
+        efetch = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?&db=pubmed&retmode=xml&id=%s" % (i)
+        handle = urlopen(efetch)
+        data_xml = handle.read()
         data = parse_data_author(data_xml)
         data1.update(data)
-    # print(len(data1))
-    # with open("dataset_author_json1", "w") as f:
-    #     json.dump(data1, f)
-    #     print("finish json.")
+    with open("dataset_author_affiliation.json", "w") as f:
+        json.dump(data1, f)
+        print("finish json.")
 
 def get_csv(PMID):
     data1 = {}
@@ -154,10 +158,6 @@ def get_csv(PMID):
         data_xml = handle.read()
         data = parse_data_author(data_xml)
         data1.update(data)
-    # with open("author_affiliation_json.json", "w") as f:
-    #     json.dump(data1, f)
-    #     print("finish json.")
-
     fw = open("author_affiliation.csv", "w", newline="")
     csv_write = csv.writer(fw)
     csv_write.writerow(["PMID", "Author", "Affiliation", "length(Author)", "length(Affiliation)", "equal"])
@@ -189,17 +189,7 @@ def get_standard(a):
         b.append(s)
     return b
 
-def delete_none(a, b):
-    true = []
-    pred = []
-    for i in range(len(a)):
-        if a[i] == "None":
-            continue
-        else:
-            true.append(a[i])
-            pred.append(b[i])
-    return np.array(true), np.array(pred)
-
+# This function is to calculate the precision of organisation.
 def cal_org_pre():
     file1 = pd.read_csv("dataset_org.csv")
     file2 = open("country_city_org.json", "r")
@@ -313,6 +303,7 @@ def get_country_city_organization(affiliation):
     # fw.close()
     ####
 
+# calculate the precision and recall based on the country level.
 def cal_country_level(label):
     with open("dataset_json") as fr:
         data = json.load(fr)
@@ -332,6 +323,7 @@ def cal_country_level(label):
         recall = recall_score(y_true, y_pred, average="weighted")
         print("recall", recall)
 
+        
 def cal_organisation_level(label_org):
     with open("dataset_json") as fr:
         file = open("abstract_org.csv", "w")
@@ -402,19 +394,8 @@ if __name__ == "__main__":
     # get_json(PMID)
     # get_csv(PMID)
 
-    # places = GeoText("70010 Bari, P.R. China")
-    # a = places.cities
-    # print(a)
-
     dataset1 = pd.read_csv("author_affiliation.csv")
     affiliation = dataset1.pop("Affiliation")
-
-    # print("begin")
-    # data = "Determinants of public phobia about infectious diseases in the University of Melbourne: effect of health communication and gender difference."
-    # data = "The minimum nucleotide divergence between the Ugandan viruses and the most closely related reference strain, genotype D2, was 3.1 for the N gene and 2.6 for the H gene."
-    # a = extract_organization_StanfordNER(data)
-    # print(a)
-    # print("end")
 
     cal_organisation_level(label_org)
 
