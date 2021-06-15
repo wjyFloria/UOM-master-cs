@@ -383,40 +383,45 @@ def compare(li1, li2):
 ######  test  ######
 ####################
 
-def test(label):
-    with open("dataset_json") as fr:
-        data = json.load(fr)
-        for tw in range(1, 10):
-            print("1")
-            for aw in range(1, 10):
-                for afw in range(1, 10):
-                    if tw + aw + afw == 10:
-                        stanford_result1 = []
-                        stanford_result2 = []
-                        for key, value in data.items():
-                            possible_stanfordNER1, title_locations, abstract_locations, affiliations_locations = extract_locations_stanfordNER(
-                                stanfordNERnlp, value,  tw/10.0, aw/10.0, afw/10.0)
-                            stanford_result1 = stanford_result1 + [",".join(possible_stanfordNER1)]
-                        #     print(len(stanford_result1))
-                        #     print(stanford_result1)
-                        y_true = np.array(get_standard_country(list(label)))
-                        y_true = get_geocode(y_true)
-                        #     y_true1 = np.array(get_standard_improvement(list(label)))
-                        #     y_true2 = np.array(get_standard_test(list(label)))
-                        #     y_true3 = np.array(get_standard_improvement1(list(label)))
-                        y_pred = np.array(get_standard_country(stanford_result1))
-                        y_pred = get_geocode(y_pred)
-                        print("y_pred", y_pred)
-                        print("y_true", y_true)
+def test1(label):
+    # results = []
+    # fw = open("country_weights.csv", "w")
+    # writer = csv.writer(fw)
+    # writer.writerow(["tw", "aw", "afw", "stanford_result"])
+    # with open("dataset_json") as fr:
+    #     data = json.load(fr)
+    #     for tw in range(1, 10):
+    #         for aw in range(1, 10):
+    #             for afw in range(1, 10):
+    #                 if tw + aw + afw == 10:
+    #                     print(tw/10.0, aw/10.0, afw/10.0)
+    #                     stanford_result1 = []
+    #                     for key, value in data.items():
+    #                         possible_stanfordNER1, title_locations, abstract_locations, affiliations_locations = extract_locations_stanfordNER(
+    #                             stanfordNERnlp, value,  tw/10.0, aw/10.0, afw/10.0)
+    #                         stanford_result1 = stanford_result1 + [",".join(possible_stanfordNER1)]
+    #                     # results[str(tw/10.0, aw/10.0, afw/10.0)] = stanford_result1
+    #                     results.append(stanford_result1)
+    #                     writer.writerow([tw/10.0, aw/10.0, afw/10.0, stanford_result1])
+    # fw.close()
+    tw = pd.read_csv("country_weights.csv", usecols=[0])
+    aw = pd.read_csv("country_weights.csv", usecols=[1])
+    afw = pd.read_csv("country_weights.csv", usecols=[2])
+    results = pd.read_csv("country_weights.csv", usecols=[3])
+    print(len(tw))
+    y_true = np.array(get_standard_country(list(label)))
+    y_true = get_test1(y_true)
+    print("begin")
+    for i in range(len(tw)):
+        li = get_test1(results[i])
+        y_pred = np.array(get_standard_country(li))
+        y_pred = get_test1(y_pred)
 
-                        # y_true, y_pred = delete_none(y_true, y_pred)
-
-                        print(tw/10.0, aw/10.0, afw/10.0)
-
-                        precision = precision_score(y_true, y_pred, average="weighted")
-                        print("precision", precision)
-                        recall = recall_score(y_true, y_pred, average="weighted")
-                        print("recall", recall)
+        print(tw[i], aw[i], afw[i])
+        precision = precision_score(y_true, y_pred, average="weighted")
+        print("precision", precision)
+        recall = recall_score(y_true, y_pred, average="weighted")
+        print("recall", recall)
 
 def get_test1(a):
     b = []
