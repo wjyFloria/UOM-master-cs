@@ -80,7 +80,7 @@ def geocode(geocoder, config, query):
 """
 E-utility can help to get full text with PMICD.
 Full text is stored in "full_text.json", eg:{31411: full text}
-Extractions of country and organisation based on StandfordNER are stored in the "dataset_fullText.json", eg:{"31411": [["Sweden"], ["Collection Institut Pasteur"}
+Extractions of country and organisation based on StandfordNER are stored in the "entity_fullTextCountry_fullTextOrganisation.json", eg:{"31411": [["Sweden"], ["Collection Institut Pasteur"}
 """
 
 def get_fullText_json(PMCID):
